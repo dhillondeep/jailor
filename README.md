@@ -1,76 +1,78 @@
-jailtime [![Build Status](https://api.travis-ci.org/cblichmann/jailtime.svg?branch=master)](https://travis-ci.org/cblichmann/jailtime)
+Jailor
 ========
 
-jailtime is a command-line utility to create and manage chroot/jail
-environments.
-Why is this useful? jailtime helps to
+This project is fork of [jailtime](https://github.com/cblichmann/jailtime). This
+fork aims to develop cleaner CLI and expose internal API to allow other projects
+to use jailor functionality.
+
+Jailor is a cli utility to create, manager and run chroot/jail environments.
+Jailor also exposes underlying API and hence can be used by other go projects.
+
+Why is this useful? Jailor helps to:
   - create restricted SSH logins that only allow scp or git, etc.
   - build a Docker image without all the clutter of a fat base image based on
     a full Linux distribution.
   - restrict daemons into a filesystem sub-tree to enhance security.
-
+  - run commands in isolated filesystem
 
 Table of Contents
 -----------------
 
-  * [jailtime](README.md#jailtime-)
-     * [Requirements](README.md#requirements)
+  * [Jailor](README.md#jailor-)
      * [How to Build](README.md#how-to-build)
         * [Build using Make](README.md#build-using-make)
      * [How to Use](README.md#how-to-use)
+        * [Using in Go Projects](README.md#using-in-go-projects)
+        * [Using CLI](README.md#using-cli)
         * [Writing Jail Specifications](README.md#writing-jail-specifications)
         * [Entering a chroot](README.md#entering-a-chroot)
      * [Bugs](README.md#bugs)
      * [Similar Tools](README.md#similar-tools)
      * [Copyright/License](README.md#copyrightlicense)
 
-
-Requirements
-------------
-
-  - Go version 1.9 or later
-  - Git version 1.7 or later
-  - Optional: CDBS (to build the Debian packages)
-  - Optional: GNU Make
-  - Currently only runs on 32-bit or 64-bit x86 Linux and macOS
-
-
 How to Build
 ------------
 
 General way to build from source via `go get`:
 ```
-go get blichmann.eu/code/jailtime
+go get github.com/dhillondeep/jailor
 ```
 
 ### Build using Make
 
 To build from a specific revision/branch/tag, not using `go get`:
 ```bash
-mkdir -p jailtime && cd jailtime
-git clone https://github.com/cblichmann/jailtime.git .
-# Optional: checkout a specific rev./branch/tag using i.e. git checkout
+mkdir -p jailor && cd jailor
+git clone https://github.com/dhillondeep/jailor.git .
 make
 ```
 
 You may want to create a symlink to the binary somewhere in your path.
 
-
 How to Use
 ----------
 
-jailtime creates/updates a target chroot directory from an existing jail
+### Using in Go Projects
+Jailor provides cli tool to manage and run jail but, it also exposes it's API.
+This allows other go projects to use it's functionality:
+
+```go
+import "github.com/dhillondeep/jailor/pkg/jailor"
+```
+
+### Using CLI
+
+jailor `create` creates/updates a target chroot directory from an existing jail
 specification (see next section). The general invocation syntax is:
 ```
-jailtime <one or more jailspec files> <target dir>
+jailor create <jailspec files> <target dir>
 ```
-Multiple jailspec files will be merged and their statements applied in order.
 
 To get started with a rather basic chroot that allows to run Bash
 interactively, see the files in the examples/ directory. For the basic shell
 example:
 ```
-jailtime examples/basic_shell.jailspec chroot_dir
+jailor examples/basic_shell.jailspec chroot_dir
 ```
 This will copy (among other files) your local `/bin/bash` to
 `chroot_dir/bin/bash` and copy its library dependencies as well. On a Debian
@@ -134,7 +136,7 @@ They are created similar to normal files:
 /dev/null c 1 3
 /dev/zero c 1 5
 ```
-Note: Device creation will most likely require jailtime to be run as root.
+Note: Device creation will most likely require jailor to be run as root.
 
 Use a 'run' directive for advanced customizations of the chroot:
 ```
@@ -162,44 +164,6 @@ The include will be relative to the current specification file and file
 inclusion may be nested up to 8 levels deep. Run statements are executed in
 order and later specifications override earlier ones.
 
-
-### Entering a chroot
-
-On most systems, entering a chroot environment requires root or at least
-administrative privileges. If `sudo` is installed, you can create and enter a
-chroot with a basic shell like this:
-```bash
-jailtime examples/basic_shell.jailspec chroot_dir
-sudo chroot chroot_dir
-```
-If you are on a system with [systemd](
-http://freedesktop.org/wiki/Software/systemd/) (most Linux systems nowadays),
-you can also easily create a lightweight container:
-```bash
-sudo systemd-nspawn -D chroot_dir/ /bin/bash
-```
-This uses the same underlying technique as [Docker](https://www.docker.com/),
-Linux Containers (LXC), and allows for greater isolation.
-
-Another good option is to use [nsjail](https://google.github.io/nsjail/),
-which uses a similar technique but also allows to restrict the chroot even
-further by using a seccomp-bpf based sandbox. Here is an example that changes
-both the current user and group to 99999:
-```bash
-sudo nsjail -Mo --chroot chroot_dir/ --user 999999 --group 99999 -- /bin/bash
-```
-
-FreeBSD derived systems also have the [jail](
-https://www.freebsd.org/cgi/man.cgi?query=jail&format=html) utility, which
-serves a similar purpose.
-
-
-Bugs
-----
-
-  - Error messages could be more specific
-
-
 Similar Tools
 -------------
 
@@ -222,9 +186,8 @@ These tools serve a similar purpose or are somewhat related:
 
 Copyright/License
 -----------------
+- Copyright (c)2015-2020 Christian Blichmann <jailtime@blichmann.eu>
+- Copyright (c)2020 Deep Dhillon <deep@dhillon.io>
 
-jailtime version 0.8
-Copyright (c)2015-2020 Christian Blichmann <jailtime@blichmann.eu>
-
-jailtime is licensed under a two-clause BSD license, see the LICENSE file
+jailor is licensed under a two-clause BSD license, see the LICENSE file
 for details.
