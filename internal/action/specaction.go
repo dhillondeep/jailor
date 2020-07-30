@@ -32,8 +32,8 @@ import (
 	"os/exec"
 	"syscall"
 
-	"blichmann.eu/code/jailtime/internal/spec"
-	"blichmann.eu/code/jailtime/pkg/copy"
+	"github.com/dhillondeep/jailor/pkg/copy"
+	"github.com/dhillondeep/jailor/pkg/spec"
 )
 
 func Directory(target string, d spec.Directory) error {

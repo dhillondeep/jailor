@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"github.com/dhillondeep/jailor/pkg/jailor"
+	"github.com/dhillondeep/jailor/pkg/spec"
 	"github.com/spf13/cobra"
 )
 
@@ -14,9 +16,22 @@ It creates filesystem isolation and restricts daemons into filesystem sub-tree t
 Usage: jailor create [flags] <spec path> <dir path> `,
 		Args: cobra.ExactArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
-			// TODO: parse spec
+			parsed, err := spec.Parse(args[0])
+			if err != nil {
+				panic(err)
+			}
 
-			// TODO: call create api
+			useCow, _ := cmd.Flags().GetBool("cow")
+			force, _ := cmd.Flags().GetBool("force")
+			clean, _ := cmd.Flags().GetBool("clean")
+
+			if err := jailor.CreateJail(jailor.JailContext{
+				UseCow: useCow,
+				Force:  force,
+				Clean:  clean,
+			}, parsed, args[1]); err != nil {
+				panic(err)
+			}
 		},
 	}
 )
